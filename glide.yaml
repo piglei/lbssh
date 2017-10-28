@@ -1,0 +1,12 @@
+package: gitlab.zlovezl.cn/piglei/ezssh
+import:
+- package: github.com/c-bata/go-prompt
+  version: ^0.1.1
+- package: github.com/sirupsen/logrus
+  version: ^1.0.3
+- package: github.com/spf13/viper
+  version: ^1.0.0
+- package: github.com/mitchellh/mapstructure
+- package: github.com/spf13/afero
+- package: github.com/renstrom/fuzzysearch
+  version: ^1.0.0
