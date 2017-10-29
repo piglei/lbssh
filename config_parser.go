@@ -35,12 +35,13 @@ func (parser *SSHConfigFileParser) Parse() {
 			continue
 		}
 		key, value := items[0], items[1]
-		switch key {
-		case "Hostname":
+		// SSH config file keyword is case-insensitive
+		switch strings.ToLower(key) {
+		case "hostname":
 			if parser.currentHostEntry != nil {
 				parser.currentHostEntry.HostName = value
 			}
-		case "Host":
+		case "host":
 			// End of host section
 			if parser.currentHostEntry != nil {
 				parser.hostEntries = append(parser.hostEntries, parser.currentHostEntry)
@@ -50,7 +51,7 @@ func (parser *SSHConfigFileParser) Parse() {
 				break
 			}
 			parser.currentHostEntry = &HostEntry{Name: value}
-		case "ProxyCommand":
+		case "proxycommand":
 			// If Host was connected via a proxy command, try to get the IP address as HostName
 			IPInCommand := ReIPAddress.Find([]byte(value))
 			if IPInCommand != nil {
