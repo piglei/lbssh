@@ -21,9 +21,9 @@ func executor(t string) {
 
 	args := strings.Split(t, " ")
 	if args[0] == ActionGo && len(args) > 1 {
-		sshBin := viper.GetString(SSH_BIN)
+		sshBin := viper.GetString(SSHBin)
 		if sshBin == "" {
-			sshBin = SSH_BIN_DEFAULT
+			sshBin = SSHBinDefault
 		}
 
 		command := sshBin + " " + strings.Join(args[1:], " ")

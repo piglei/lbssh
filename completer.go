@@ -45,11 +45,19 @@ func (cpl *HostCompleter) completer(d prompt.Document) []prompt.Suggest {
 		return []prompt.Suggest{}
 	}
 
-	suggestions := []prompt.Suggest{}
+	// Allow user to override user, "root@x.com" => "x.com"
+	var textBeforekey string
+	keySegments := strings.Split(key, "@")
+	if len(keySegments) != 1 {
+		key = keySegments[len(keySegments)-1]
+		textBeforekey = strings.Join(keySegments[:len(keySegments)-1], "@") + "@"
+	}
+
+	var suggestions []prompt.Suggest
 	for _, hostEntry := range FilterHostsByKeyword(cpl.entris, key) {
 		suggestions = append(suggestions, prompt.Suggest{
-			Text:        hostEntry.Name,
-			Description: fmt.Sprintf("hostname: %s", hostEntry.HostName),
+			Text:        textBeforekey + hostEntry.Name,
+			Description: fmt.Sprintf("%s", hostEntry.HostName),
 		})
 	}
 	log.Debugf("%s matches found for key %s", len(suggestions), key)
@@ -63,7 +71,7 @@ type MatchedItem struct {
 
 // FilterHostsByKeyword fuzzy query host entries
 func FilterHostsByKeyword(entries []*HostEntry, key string) []*HostEntry {
-	matched := []*MatchedItem{}
+	var matched []*MatchedItem
 	for _, hostEntry := range entries {
 		nameRank := fuzzy.RankMatchFold(key, hostEntry.Name)
 		hostNameRank := fuzzy.RankMatchFold(key, hostEntry.HostName)
@@ -92,7 +100,7 @@ func FilterHostsByKeyword(entries []*HostEntry, key string) []*HostEntry {
 		}
 	})
 
-	results := []*HostEntry{}
+	var results []*HostEntry
 	for _, item := range matched {
 		results = append(results, item.host)
 	}

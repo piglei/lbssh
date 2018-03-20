@@ -33,7 +33,7 @@ var _ = Describe("FilterHostsByKeyword", func() {
 
 	It("test proper order with Hostname", func() {
 		hosts := []*HostEntry{
-			{Name: "proxy3-80", HostName: "200.222.222.80"},
+			{Name: "proxy3-80", HostName: "201.222.222.80"},
 			{Name: "q.dev1-180.uni", HostName: "200.222.222.180"},
 		}
 
@@ -41,7 +41,7 @@ var _ = Describe("FilterHostsByKeyword", func() {
 		Expect(result).To(Equal(
 			[]*HostEntry{
 				{Name: "q.dev1-180.uni", HostName: "200.222.222.180"},
-				{Name: "proxy3-80", HostName: "200.222.222.80"},
+				{Name: "proxy3-80", HostName: "201.222.222.80"},
 			}))
 	})
 })
