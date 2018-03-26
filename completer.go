@@ -80,25 +80,6 @@ func (m *MatchedItem) SortmGroups() {
 
 // FilterHostsByKeyword using fuzzy search to find the best matched hostEntried and sort the result
 func FilterHostsByKeyword(entries []*HostEntry, key string) []*HostEntry {
-	// Because we are using Levenshtein distance(aka. edit distance) algorithm to find the best matched result,
-	// in order to perform an apples to apples comparison, we can:
-	//
-	// - Remove the leading and trailing characters, then count for edit distance
-	var maxLengthName, maxLengthHostname int
-	for _, hostEntry := range entries {
-		if len(hostEntry.Name) > maxLengthName {
-			maxLengthName = len(hostEntry.Name)
-		}
-		if len(hostEntry.HostName) > maxLengthHostname {
-			maxLengthHostname = len(hostEntry.HostName)
-		}
-	}
-	log.Debugf(
-		"maxLengthName=%d, maxLengthHostname=%d, will extend all cadidates to this length",
-		maxLengthName,
-		maxLengthHostname,
-	)
-
 	key = strings.ToLower(key)
 	var matchedItems []*MatchedItem
 	for _, hostEntry := range entries {
