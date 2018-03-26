@@ -2,10 +2,29 @@
 
 
 [[projects]]
+  name = "github.com/asdine/storm"
+  packages = [
+    ".",
+    "codec",
+    "codec/json",
+    "index",
+    "internal",
+    "q"
+  ]
+  revision = "a86fa5e09c9c50a06416b08fd9acd4839fb2d62e"
+  version = "v2.1.0"
+
+[[projects]]
   name = "github.com/c-bata/go-prompt"
   packages = ["."]
   revision = "e99fbc797b795e0a7a94affc8d44f6a0350d85f0"
   version = "v0.2.1"
+
+[[projects]]
+  name = "github.com/coreos/bbolt"
+  packages = ["."]
+  revision = "583e8937c61f1af6513608ccc75c97b6abdf4ff9"
+  version = "v1.3.0"
 
 [[projects]]
   name = "github.com/fsnotify/fsnotify"
@@ -208,6 +227,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "550cf1403dda9aff90929423870d06b42f0d5fca915ec4732a89aa95ffa3e2e6"
+  inputs-digest = "a1fb4bbf49124b09e1dc29d75b4fea93ada5d665a1a3f19fa829080580f335fc"
   solver-name = "gps-cdcl"
   solver-version = 1

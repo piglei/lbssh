@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/renstrom/fuzzysearch/fuzzy"
+	"github.com/piglei/lbssh/pkg/util"
 )
 
 // MainCompleter is the main completer
@@ -65,43 +65,81 @@ func (cpl *HostCompleter) completer(d prompt.Document) []prompt.Suggest {
 }
 
 type MatchedItem struct {
-	host   *HostEntry
-	weight float64
+	host      *HostEntry
+	weight    float64
+	numFields int
+	mGroups   []int
 }
 
-// FilterHostsByKeyword fuzzy query host entries
+func (m *MatchedItem) SortmGroups() {
+	sort.Sort(sort.Reverse(sort.IntSlice(m.mGroups)))
+}
+
+// FilterHostsByKeyword using fuzzy search to find the best matched hostEntried and sort the result
 func FilterHostsByKeyword(entries []*HostEntry, key string) []*HostEntry {
-	var matched []*MatchedItem
+	// Because we are using Levenshtein distance(aka. edit distance) algorithm to find the best matched result,
+	// in order to perform an apples to apples comparison, we can:
+	//
+	// - Remove the leading and trailing characters, then count for edit distance
+	var maxLengthName, maxLengthHostname int
 	for _, hostEntry := range entries {
-		nameRank := fuzzy.RankMatchFold(key, hostEntry.Name)
-		hostNameRank := fuzzy.RankMatchFold(key, hostEntry.HostName)
-		if nameRank == -1 && hostNameRank == -1 {
+		if len(hostEntry.Name) > maxLengthName {
+			maxLengthName = len(hostEntry.Name)
+		}
+		if len(hostEntry.HostName) > maxLengthHostname {
+			maxLengthHostname = len(hostEntry.HostName)
+		}
+	}
+	log.Debugf(
+		"maxLengthName=%d, maxLengthHostname=%d, will extend all cadidates to this length",
+		maxLengthName,
+		maxLengthHostname,
+	)
+
+	var matchedItems []*MatchedItem
+	for _, hostEntry := range entries {
+		matched := &MatchedItem{host: hostEntry}
+		for _, target := range []string{hostEntry.Name, hostEntry.HostName} {
+			mLength, _, mGroups := util.LCSFuzzySearch(key, target)
+			if mLength != len(key) {
+				continue
+			}
+
+			log.Debugf("Match field found: key=%s target=%s groups=%+v", key, target, mGroups)
+			matched.numFields += 1
+			for _, value := range mGroups {
+				matched.mGroups = append(matched.mGroups, value)
+			}
+		}
+		// Ignore non-matched found items
+		if matched.numFields == 0 {
 			continue
 		}
 
-		var weight float64
-		if nameRank != -1 {
-			weight += 1 / float64(nameRank)
-		}
-		if hostNameRank != -1 {
-			weight += 1 / float64(hostNameRank)
-		}
-		matched = append(matched, &MatchedItem{
-			host:   hostEntry,
-			weight: weight,
-		})
+		matched.SortmGroups()
+		matchedItems = append(matchedItems, matched)
+		log.Debugf("Match item found: key=%s groups=%+v", key, matched.mGroups)
 	}
 	// Sort results
-	sort.SliceStable(matched, func(i, j int) bool {
-		if matched[i].weight == matched[j].weight {
-			return len(matched[i].host.Name) < len(matched[j].host.Name)
-		} else {
-			return matched[i].weight > matched[j].weight
+	sort.SliceStable(matchedItems, func(i, j int) bool {
+		i1, i2 := matchedItems[i], matchedItems[j]
+		if i1.numFields > i2.numFields {
+			return true
 		}
+		if len(i1.mGroups) != len(i2.mGroups) {
+			return len(i1.mGroups) < len(i2.mGroups)
+		}
+		for i, v := range i1.mGroups {
+			if v == i2.mGroups[i] {
+				continue
+			}
+			return v > i2.mGroups[i]
+		}
+		return true
 	})
 
 	var results []*HostEntry
-	for _, item := range matched {
+	for _, item := range matchedItems {
 		results = append(results, item.host)
 	}
 	return results

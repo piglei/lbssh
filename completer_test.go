@@ -5,13 +5,19 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	log "github.com/sirupsen/logrus"
 )
 
+func init() {
+	log.SetLevel(log.DebugLevel)
+}
+
 var _ = Describe("FilterHostsByKeyword", func() {
-	It("test proper order", func() {
+	It("a normal match for multiple cases", func() {
 		hosts := []*HostEntry{
 			{Name: "capggp"},
-			{Name: "apple"},
+			{Name: "apple-2"},
 			{Name: "3223abbp3223pppa"},
 			{Name: "capgp"},
 			{Name: "non-sense"},
@@ -21,7 +27,7 @@ var _ = Describe("FilterHostsByKeyword", func() {
 		Expect(len(result)).To(Equal(4))
 		Expect(result).To(Equal(
 			[]*HostEntry{
-				{Name: "apple"},
+				{Name: "apple-2"},
 				{Name: "capgp"},
 				{Name: "capggp"},
 				{Name: "3223abbp3223pppa"},
@@ -31,7 +37,7 @@ var _ = Describe("FilterHostsByKeyword", func() {
 		Expect(len(result)).To(Equal(0))
 	})
 
-	It("test proper order with Hostname", func() {
+	It("key appears in both name & hostname is better", func() {
 		hosts := []*HostEntry{
 			{Name: "proxy3-80", HostName: "201.222.222.80"},
 			{Name: "q.dev1-180.uni", HostName: "200.222.222.180"},
@@ -42,6 +48,19 @@ var _ = Describe("FilterHostsByKeyword", func() {
 			[]*HostEntry{
 				{Name: "q.dev1-180.uni", HostName: "200.222.222.180"},
 				{Name: "proxy3-80", HostName: "201.222.222.80"},
+			}))
+	})
+
+	It("full segment match is better", func() {
+		hosts := []*HostEntry{
+			{Name: "cb--", HostName: ""},
+			{Name: "ceb", HostName: ""},
+		}
+		result := FilterHostsByKeyword(hosts, "cb")
+		Expect(result).To(Equal(
+			[]*HostEntry{
+				{Name: "cb--", HostName: ""},
+				{Name: "ceb", HostName: ""},
 			}))
 	})
 })

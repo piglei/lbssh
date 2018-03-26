@@ -7,20 +7,20 @@ import (
 	"path"
 	"text/template"
 
+	"bytes"
 	"fmt"
 	"github.com/c-bata/go-prompt"
+	"github.com/piglei/lbssh/pkg/version"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"github.com/piglei/lbssh/pkg/version"
-	"bytes"
 )
 
 const (
 	ActionGo = "go"
 
-	SSHBin            = "SSH_BIN"
-	SSHBinDefault    = "/usr/bin/ssh"
+	SSHBin             = "SSH_BIN"
+	SSHBinDefault      = "/usr/bin/ssh"
 	WelcomeMessageTmpl = `
   _ _          _
  | | |__ _____| |_

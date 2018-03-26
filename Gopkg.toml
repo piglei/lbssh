@@ -45,6 +45,10 @@
   name = "github.com/spf13/pflag"
   version = "1.0.0"
 
+[[constraint]]
+  name = "github.com/asdine/storm"
+  version = "2.1.0"
+
 [prune]
   go-tests = true
   unused-packages = true
