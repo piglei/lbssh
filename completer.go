@@ -99,6 +99,7 @@ func FilterHostsByKeyword(entries []*HostEntry, key string) []*HostEntry {
 		maxLengthHostname,
 	)
 
+	key = strings.ToLower(key)
 	var matchedItems []*MatchedItem
 	for _, hostEntry := range entries {
 		matched := &MatchedItem{
@@ -106,10 +107,12 @@ func FilterHostsByKeyword(entries []*HostEntry, key string) []*HostEntry {
 			host: hostEntry,
 		}
 		for _, target := range []string{hostEntry.Name, hostEntry.HostName} {
-			mLength, _, mGroups := util.LCSFuzzySearch(key, target)
-			if mLength != len(key) {
+			target = strings.ToLower(target)
+			// Use fuzzy match to grep the result first for better performance
+			if !fuzzy.Match(key, target) {
 				continue
 			}
+			_, _, mGroups := util.LCSFuzzySearch(key, target)
 
 			log.Debugf("Match field found: key=%s target=%s groups=%+v", key, target, mGroups)
 			matched.numFields += 1
