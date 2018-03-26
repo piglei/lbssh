@@ -36,7 +36,6 @@ var _ = Describe("FilterHostsByKeyword", func() {
 		result = FilterHostsByKeyword(hosts, "non-existed-key")
 		Expect(len(result)).To(Equal(0))
 	})
-
 	It("key appears in both name & hostname is better", func() {
 		hosts := []*HostEntry{
 			{Name: "proxy3-80", HostName: "201.222.222.80"},
@@ -50,7 +49,6 @@ var _ = Describe("FilterHostsByKeyword", func() {
 				{Name: "proxy3-80", HostName: "201.222.222.80"},
 			}))
 	})
-
 	It("full segment match is better", func() {
 		hosts := []*HostEntry{
 			{Name: "cb--", HostName: ""},
@@ -61,6 +59,18 @@ var _ = Describe("FilterHostsByKeyword", func() {
 			[]*HostEntry{
 				{Name: "cb--", HostName: ""},
 				{Name: "ceb", HostName: ""},
+			}))
+	})
+	It("mGroups is the same, use edit distance", func() {
+		hosts := []*HostEntry{
+			{Name: "apple-tree-fool", HostName: ""},
+			{Name: "apple-tree-in-forest", HostName: ""},
+		}
+		result := FilterHostsByKeyword(hosts, "appfo")
+		Expect(result).To(Equal(
+			[]*HostEntry{
+				{Name: "apple-tree-fool", HostName: ""},
+				{Name: "apple-tree-in-forest", HostName: ""},
 			}))
 	})
 })

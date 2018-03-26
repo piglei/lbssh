@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/piglei/lbssh/pkg/util"
+	"github.com/renstrom/fuzzysearch/fuzzy"
 )
 
 // MainCompleter is the main completer
@@ -65,10 +66,12 @@ func (cpl *HostCompleter) completer(d prompt.Document) []prompt.Suggest {
 }
 
 type MatchedItem struct {
+	key       string
 	host      *HostEntry
 	weight    float64
 	numFields int
 	mGroups   []int
+	editDistances []int
 }
 
 func (m *MatchedItem) SortmGroups() {
@@ -98,7 +101,10 @@ func FilterHostsByKeyword(entries []*HostEntry, key string) []*HostEntry {
 
 	var matchedItems []*MatchedItem
 	for _, hostEntry := range entries {
-		matched := &MatchedItem{host: hostEntry}
+		matched := &MatchedItem{
+			key:  key,
+			host: hostEntry,
+		}
 		for _, target := range []string{hostEntry.Name, hostEntry.HostName} {
 			mLength, _, mGroups := util.LCSFuzzySearch(key, target)
 			if mLength != len(key) {
@@ -110,6 +116,8 @@ func FilterHostsByKeyword(entries []*HostEntry, key string) []*HostEntry {
 			for _, value := range mGroups {
 				matched.mGroups = append(matched.mGroups, value)
 			}
+			// If mGroups is identical, levenshteinDistance will be use for sort
+			matched.editDistances = append(matched.editDistances, fuzzy.LevenshteinDistance(key, target))
 		}
 		// Ignore non-matched found items
 		if matched.numFields == 0 {
@@ -120,6 +128,7 @@ func FilterHostsByKeyword(entries []*HostEntry, key string) []*HostEntry {
 		matchedItems = append(matchedItems, matched)
 		log.Debugf("Match item found: key=%s groups=%+v", key, matched.mGroups)
 	}
+
 	// Sort results
 	sort.SliceStable(matchedItems, func(i, j int) bool {
 		i1, i2 := matchedItems[i], matchedItems[j]
@@ -129,11 +138,19 @@ func FilterHostsByKeyword(entries []*HostEntry, key string) []*HostEntry {
 		if len(i1.mGroups) != len(i2.mGroups) {
 			return len(i1.mGroups) < len(i2.mGroups)
 		}
+
 		for i, v := range i1.mGroups {
 			if v == i2.mGroups[i] {
 				continue
 			}
 			return v > i2.mGroups[i]
+		}
+
+		for i, v := range i1.editDistances {
+			if v == i2.editDistances[i] {
+				continue
+			}
+			return v < i2.editDistances[i]
 		}
 		return true
 	})
