@@ -38,15 +38,15 @@ var _ = Describe("FilterHostsByKeyword", func() {
 	})
 	It("key appears in both name & hostname is better", func() {
 		hosts := []*HostEntry{
-			{Name: "proxy3-80", HostName: "201.222.222.80"},
-			{Name: "q.dev1-180.uni", HostName: "200.222.222.180"},
+			{Name: "tokyo-180", HostName: "ip-tokyo-180"},
+			{Name: "tokyo-jp-191", HostName: "111.111.111.111"},
 		}
 
-		result := FilterHostsByKeyword(hosts, "180")
+		result := FilterHostsByKeyword(hosts, "tok")
 		Expect(result).To(Equal(
 			[]*HostEntry{
-				{Name: "q.dev1-180.uni", HostName: "200.222.222.180"},
-				{Name: "proxy3-80", HostName: "201.222.222.80"},
+				{Name: "tokyo-180", HostName: "ip-tokyo-180"},
+				{Name: "tokyo-jp-191", HostName: "111.111.111.111"},
 			}))
 	})
 	It("full segment match is better", func() {

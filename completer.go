@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/piglei/lbssh/pkg/storage"
 	"github.com/piglei/lbssh/pkg/util"
 	"github.com/renstrom/fuzzysearch/fuzzy"
 )
@@ -35,7 +36,28 @@ func (cpl *MainCompleter) completer(d prompt.Document) []prompt.Suggest {
 
 // HostCompleter
 type HostCompleter struct {
-	entris []*HostEntry
+	entris  []*HostEntry
+	backend storage.HostBackend
+}
+
+// HostMatchedItem is the matched item for completer
+type HostMatchedItem struct {
+	isRecommended bool
+	entry         *HostEntry
+	profile       *storage.HostProfile
+}
+
+func (item *HostMatchedItem) GetDescription() string {
+	recommendedFlag := ""
+	if item.isRecommended {
+		recommendedFlag = "[*] "
+	}
+	return fmt.Sprintf(
+		"%sLast visited: %s | %s",
+		recommendedFlag,
+		item.profile.GetLastVisitedForDisplay(),
+		item.entry.HostName,
+	)
 }
 
 func (cpl *HostCompleter) completer(d prompt.Document) []prompt.Suggest {
@@ -55,10 +77,45 @@ func (cpl *HostCompleter) completer(d prompt.Document) []prompt.Suggest {
 	}
 
 	var suggestions []prompt.Suggest
-	for _, hostEntry := range FilterHostsByKeyword(cpl.entris, key) {
+	var items []*HostMatchedItem
+	var mostRecentIndex int
+	var maxLastVisited int
+	matchedHosts := FilterHostsByKeyword(cpl.entris, key)
+
+	for i, hostEntry := range matchedHosts {
+		profile, _ := cpl.backend.GetProfile(hostEntry.Name)
+		if profile.LastVisited > maxLastVisited {
+			mostRecentIndex = i
+			maxLastVisited = profile.LastVisited
+		}
+		items = append(items, &HostMatchedItem{
+			profile: profile,
+			entry:   hostEntry,
+		})
+	}
+	// When user input is empty, we should sort all items by last visited time desc
+	if key == "" {
+		sort.SliceStable(items, func(i, j int) bool {
+			return items[i].profile.LastVisited > items[j].profile.LastVisited
+		})
+	} else {
+		// Delete the most recent item from sorting
+		var mostRecentItem *HostMatchedItem
+		if mostRecentIndex != 0 {
+			mostRecentItem = items[mostRecentIndex]
+			items = append(items[:mostRecentIndex], items[mostRecentIndex+1:]...)
+
+			// Prepend the mostRecentItem back to slice and mark it as RECOMMENDED
+			mostRecentItem.isRecommended = true
+			itemsCopy := append([]*HostMatchedItem{}, mostRecentItem)
+			items = append(itemsCopy, items...)
+		}
+	}
+
+	for _, item := range items {
 		suggestions = append(suggestions, prompt.Suggest{
-			Text:        textBeforekey + hostEntry.Name,
-			Description: fmt.Sprintf("%s", hostEntry.HostName),
+			Text:        textBeforekey + item.entry.Name,
+			Description: item.GetDescription(),
 		})
 	}
 	log.Debugf("%s matches found for key %s", len(suggestions), key)
@@ -66,16 +123,42 @@ func (cpl *HostCompleter) completer(d prompt.Document) []prompt.Suggest {
 }
 
 type MatchedItem struct {
-	key       string
-	host      *HostEntry
-	weight    float64
-	numFields int
-	mGroups   []int
+	key           string
+	host          *HostEntry
+	weight        float64
+	numFields     int
+	mGroups       []int
 	editDistances []int
 }
 
 func (m *MatchedItem) SortmGroups() {
 	sort.Sort(sort.Reverse(sort.IntSlice(m.mGroups)))
+}
+
+// HasHigherPriority compares MatchedItem with another item to determine which one should have higher
+// priority in search results.
+func (m *MatchedItem) HasHigherPriority(n *MatchedItem) bool {
+	if m.numFields != n.numFields {
+		return m.numFields > n.numFields
+	}
+	if len(m.mGroups) != len(n.mGroups) {
+		return len(m.mGroups) < len(n.mGroups)
+	}
+
+	for i, v := range m.mGroups {
+		if v == n.mGroups[i] {
+			continue
+		}
+		return v > n.mGroups[i]
+	}
+
+	for i, v := range m.editDistances {
+		if v == n.editDistances[i] {
+			continue
+		}
+		return v < n.editDistances[i]
+	}
+	return true
 }
 
 // FilterHostsByKeyword using fuzzy search to find the best matched hostEntried and sort the result
@@ -110,33 +193,13 @@ func FilterHostsByKeyword(entries []*HostEntry, key string) []*HostEntry {
 
 		matched.SortmGroups()
 		matchedItems = append(matchedItems, matched)
-		log.Debugf("Match item found: key=%s groups=%+v", key, matched.mGroups)
+		log.Debugf("Match item found: key=%s numFields=%d groups=%+v", key, matched.numFields, matched.mGroups)
 	}
 
 	// Sort results
 	sort.SliceStable(matchedItems, func(i, j int) bool {
-		i1, i2 := matchedItems[i], matchedItems[j]
-		if i1.numFields > i2.numFields {
-			return true
-		}
-		if len(i1.mGroups) != len(i2.mGroups) {
-			return len(i1.mGroups) < len(i2.mGroups)
-		}
-
-		for i, v := range i1.mGroups {
-			if v == i2.mGroups[i] {
-				continue
-			}
-			return v > i2.mGroups[i]
-		}
-
-		for i, v := range i1.editDistances {
-			if v == i2.editDistances[i] {
-				continue
-			}
-			return v < i2.editDistances[i]
-		}
-		return true
+		m, n := matchedItems[i], matchedItems[j]
+		return m.HasHigherPriority(n)
 	})
 
 	var results []*HostEntry

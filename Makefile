@@ -4,7 +4,7 @@ GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
-VERSION=0.0.2
+VERSION=0.0.3
 
 LDFLAGS=-ldflags "-X github.com/piglei/lbssh/pkg/version.version=$(VERSION) \
 -X github.com/piglei/lbssh/pkg/version.gitCommit=`git rev-parse HEAD` \

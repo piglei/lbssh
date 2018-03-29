@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/c-bata/go-prompt"
+	"github.com/piglei/lbssh/pkg/storage"
 	"github.com/piglei/lbssh/pkg/version"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
@@ -27,12 +28,14 @@ const (
  | | '_ (_-<_-< ' \
  |_|_.__/__/__/_||_|
 
-Welcome to lbssh! (version: {{.GetVersion}})`
+Welcome to lbssh! (version: {{.GetVersion}})
+Please input "go HOSTNAME" to start!`
 )
 
 func main() {
 	currentUser, _ := user.Current()
 	pflag.String("ssh-config-file", path.Join(currentUser.HomeDir, "/.ssh/config"), "ssh config file location")
+	pflag.String("storage-db-file", path.Join(currentUser.HomeDir, "/.lbssh.db"), "db file location")
 	pflag.String("ssh-bin", SSHBinDefault, "ssh binary path")
 	pflag.String("log-level", "INFO", "log level")
 	pflag.Bool("version", false, "display version info")
@@ -66,14 +69,33 @@ func main() {
 	parser := NewSSHConfigFileParser(string(sshConfigContent))
 	parser.Parse()
 
+	// Update hostProfiles in storage
+	storageDBFile := viper.GetString("storage-db-file")
+	if storageDBFile == "" {
+		log.Fatalf("storage db file path can't be empty.\n")
+		os.Exit(1)
+	}
+	backend, err := storage.NewHostBackend(storageDBFile)
+	if err != nil {
+		log.Fatalf("Unable to open db file: %s\n", err.Error())
+		os.Exit(2)
+	}
+
+	// Initialize all hostProfiles
+	for _, host := range parser.Result() {
+		backend.CreateProfile(host.Name)
+	}
+
 	hostCompleter := HostCompleter{
-		entris: parser.Result(),
+		entris:  parser.Result(),
+		backend: backend,
 	}
 	mainCompleter := NewMainCompleter(hostCompleter)
 
 	fmt.Println(GetWelcomeMessage())
+	e := DefaultExecutor{backend: backend}
 	p := prompt.New(
-		executor,
+		e.execute,
 		mainCompleter.completer,
 		prompt.OptionPrefix("> "),
 		prompt.OptionSwitchKeyBindMode(prompt.EmacsKeyBind),
