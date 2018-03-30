@@ -36,8 +36,8 @@ $ lbssh -h
 Usage of lbssh:
       --log-level string         log level (default "INFO")
       --ssh-bin string           ssh binary path (default "/usr/bin/ssh")
-      --ssh-config-file string   ssh config file location (default "/Users/piglei/.ssh/config")
-      --storage-db-file string   db file location (default "/Users/piglei/.lbssh.db")
+      --ssh-config-file string   ssh config file location (default "~/.ssh/config")
+      --storage-db-file string   db file location (default "~/.lbssh.db")
       --version                  display version info
 ```
 
