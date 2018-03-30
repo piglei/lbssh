@@ -22,4 +22,4 @@ clean:
 build-all:
 	GOOS=darwin GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -v -o build/lbssh_darwin_amd64
 	GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -v -o build/lbssh_linux_amd64
-
+	GOOS=linux GOARCH=386 $(GOBUILD) $(LDFLAGS) -v -o build/lbssh_linux_386

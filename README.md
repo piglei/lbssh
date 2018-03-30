@@ -6,7 +6,7 @@ lbssh is SSH for lazybones, an experimental tool using go-prompt. Main features:
 - Using fuzzy search to speed up searching
 - Recommend the most possible host for you
 
-<img width="546" alt="lbssh-screenshot1 2x" src="https://user-images.githubusercontent.com/731266/32082491-79800690-baee-11e7-945a-de4e33578ac7.png">
+<img alt="lbssh-screenshot1 2x" src="https://user-images.githubusercontent.com/731266/38121101-bc18bcc4-33ff-11e8-8611-07c3b614fe9e.gif">
 
 ## How to Use
 
@@ -22,7 +22,7 @@ Port 22
 User piglei
 ```
 
-For more information on how to write ssh config, please visit []()
+For more information on how to write ssh config, you can start from [Simplify Your Life With an SSH Config File](http://nerderati.com/2011/03/17/simplify-your-life-with-an-ssh-config-file/)
 
 Now you are all setup, run `lbssh` and start your lazy life!
 
