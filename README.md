@@ -6,7 +6,7 @@ lbssh is SSH for lazybones, an experimental tool using go-prompt. Main features:
 - Using fuzzy search to speed up searching
 - Recommend the most possible host for you
 
-<img width="546" alt="lbssh-screenshot1 2x" src="https://user-images.githubusercontent.com/731266/32082491-79800690-baee-11e7-945a-de4e33578ac7.png">
+<img width="546" alt="lbssh-screenshot1 2x" src="https://user-images.githubusercontent.com/731266/38119533-fd4b15ee-33f4-11e8-911d-bb52fd8b0b92.gif">
 
 ## How to Use
 
