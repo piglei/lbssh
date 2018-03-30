@@ -17,6 +17,8 @@ var _ = Describe("Test HostBackendStorm", func() {
 		hostName := fmt.Sprintf("x-%d.com", randInt)
 
 		backend, _ := NewHostBackend("/tmp/lbssh_test.db")
+		backend.Open()
+		defer backend.Close()
 		backend.CreateProfile(hostName)
 
 		profile, _ := backend.GetProfile(hostName)

@@ -38,6 +38,8 @@ func RelativeTimeDisplay(ts int) string {
 
 // HostBackend defines the interface for hostEntry actions
 type HostBackend interface {
+	Open() error
+	Close() error
 	CreateProfile(hostname string) (*HostProfile, error)
 	GetProfile(hostname string) (*HostProfile, error)
 	AddNewVisit(hostname string) error
@@ -45,17 +47,29 @@ type HostBackend interface {
 }
 
 type HostBackendStorm struct {
+	dbPath string
 	Database *storm.DB
 }
 
 func NewHostBackend(path string) (*HostBackendStorm, error) {
-	db, err := storm.Open(path)
-	if err != nil {
-		return nil, err
-	}
 	return &HostBackendStorm{
-		Database: db,
+		dbPath: path,
 	}, nil
+}
+func (backend *HostBackendStorm) Open() error {
+	db, err := storm.Open(backend.dbPath)
+	if err != nil {
+		return err
+	}
+	backend.Database = db
+	return nil
+}
+
+func (backend *HostBackendStorm) Close() error {
+	if backend.Database != nil {
+		return backend.Database.Close()
+	}
+	return nil
 }
 
 func (backend *HostBackendStorm) CreateProfile(hostname string) (*HostProfile, error) {

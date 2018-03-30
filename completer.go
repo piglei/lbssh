@@ -61,6 +61,9 @@ func (item *HostMatchedItem) GetDescription() string {
 }
 
 func (cpl *HostCompleter) completer(d prompt.Document) []prompt.Suggest {
+	cpl.backend.Open()
+	defer cpl.backend.Close()
+
 	key := d.GetWordBeforeCursor()
 	// Only show suggestions when cursor not in first action word, which means there always will be
 	// more than one space before cursor.

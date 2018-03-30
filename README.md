@@ -11,7 +11,7 @@ lbssh is SSH for lazybones, an experimental tool using go-prompt. Main features:
 ## How to Use
 
 First, you need to install lbssh binary to your system's $BIN path. You could downlod the 
-latest binary from [here](https://github.com/piglei/lbssh/releases/tag/v0.0.3).
+latest binary from [here](https://github.com/piglei/lbssh/releases).
 
 If you don't have any hosts defined in `~/.ssh/config`, you should try add some:
 

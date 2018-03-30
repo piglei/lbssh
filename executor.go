@@ -27,6 +27,9 @@ func (e *DefaultExecutor) execute(t string) {
 
 	args := strings.Split(t, " ")
 	if args[0] == ActionGo && len(args) > 1 {
+		e.backend.Open()
+		defer e.backend.Close()
+
 		// Add counter for host
 		hostName := args[1]
 		err := e.backend.AddNewVisit(hostName)

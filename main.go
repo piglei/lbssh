@@ -81,10 +81,16 @@ func main() {
 		os.Exit(2)
 	}
 
+	err = backend.Open()
+	if err != nil {
+		log.Fatalf("Unable to open database: %s\n", err.Error())
+		os.Exit(2)
+	}
 	// Initialize all hostProfiles
 	for _, host := range parser.Result() {
 		backend.CreateProfile(host.Name)
 	}
+	backend.Close()
 
 	hostCompleter := HostCompleter{
 		entris:  parser.Result(),
