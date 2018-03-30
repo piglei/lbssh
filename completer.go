@@ -61,8 +61,6 @@ func (item *HostMatchedItem) GetDescription() string {
 }
 
 func (cpl *HostCompleter) completer(d prompt.Document) []prompt.Suggest {
-	cpl.backend.Open()
-	defer cpl.backend.Close()
 
 	key := d.GetWordBeforeCursor()
 	// Only show suggestions when cursor not in first action word, which means there always will be
@@ -85,6 +83,7 @@ func (cpl *HostCompleter) completer(d prompt.Document) []prompt.Suggest {
 	var maxLastVisited int
 	matchedHosts := FilterHostsByKeyword(cpl.entris, key)
 
+	cpl.backend.Open()
 	for i, hostEntry := range matchedHosts {
 		profile, _ := cpl.backend.GetProfile(hostEntry.Name)
 		if profile.LastVisited > maxLastVisited {
@@ -96,6 +95,8 @@ func (cpl *HostCompleter) completer(d prompt.Document) []prompt.Suggest {
 			entry:   hostEntry,
 		})
 	}
+	cpl.backend.Close()
+
 	// When user input is empty, we should sort all items by last visited time desc
 	if key == "" {
 		sort.SliceStable(items, func(i, j int) bool {

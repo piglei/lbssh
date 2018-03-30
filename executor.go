@@ -27,15 +27,16 @@ func (e *DefaultExecutor) execute(t string) {
 
 	args := strings.Split(t, " ")
 	if args[0] == ActionGo && len(args) > 1 {
-		e.backend.Open()
-		defer e.backend.Close()
 
 		// Add counter for host
 		hostName := args[1]
+		e.backend.Open()
 		err := e.backend.AddNewVisit(hostName)
 		if err != nil {
 			log.Warnf("Unable to update visit fields for %s: %s", hostName, err.Error())
 		}
+		e.backend.Close()
+
 		sshArgs := strings.Join(args[1:], " ")
 		e.StartSSHSession(sshArgs)
 		return
