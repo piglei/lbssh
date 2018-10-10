@@ -8,10 +8,10 @@ lbssh is SSH for lazybones, an experimental tool using go-prompt. Main features:
 
 <img alt="lbssh-screenshot1 2x" src="https://user-images.githubusercontent.com/731266/38121101-bc18bcc4-33ff-11e8-8611-07c3b614fe9e.gif">
 
-## How to Use
+## How to use
 
-First, you need to install lbssh binary to your system's $BIN path. You could downlod the 
-latest binary from [here](https://github.com/piglei/lbssh/releases).
+First, you need to install lbssh binary to your system's `$BIN` path. You could downlod the 
+latest binaries from [here](https://github.com/piglei/lbssh/releases).
 
 If you don't have any hosts defined in `~/.ssh/config`, you should try add some:
 
